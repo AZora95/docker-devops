@@ -1,0 +1,19 @@
+{
+  "name": "lipari-be",
+  "version": "1.0.0",
+  "description": "Bootcamp Docker DevOps - Backend campione (Node.js + Postgres + Redis)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "ioredis": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}
