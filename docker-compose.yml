@@ -1,0 +1,26 @@
+services:
+  frontend:
+    build: ./percorso-fe
+    image: lipari-fe:dev
+    ports:
+      - "8080:80"
+    depends_on:
+      - mock-api
+    networks:
+      - app-net
+
+  mock-api:
+    image: clue/json-server
+    command: --watch /data/db.json --host 0.0.0.0 --port 80
+    volumes:
+      - ./percorso-fe/mocks/db.json:/data/db.json:ro
+    networks:
+      - app-net
+
+  cache:
+    image: redis:7.2-alpine
+    networks:
+      - app-net
+
+networks:
+  app-net:
