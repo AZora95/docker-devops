@@ -11,9 +11,9 @@ services:
 
   mock-api:
     image: clue/json-server
-    command: --watch /data/db.json --host 0.0.0.0 --port 80
+    command: --watch --host 0.0.0.0
     volumes:
-      - ./percorso-fe/mocks/db.json:/data/db.json:ro
+      - ./percorso-fe/src/mocks/db.json:/data/db.json:ro
     networks:
       - app-net
 
