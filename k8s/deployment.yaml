@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lipari-fe
+  labels:
+    app: lipari-fe
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lipari-fe
+  template:
+    metadata:
+      labels:
+        app: lipari-fe
+    spec:
+      containers:
+        - name: nginx
+          image: ghcr.io/REPLACE-OWNER/REPLACE-REPO-fe:REPLACE-SHA
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
