@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lipari-fe-config
+  labels:
+    app: lipari-fe
+data:
+  # Indirizzo di Redis (stesso nome del servizio "cache" in docker-compose)
+  redis-url: "redis://cache:6379"
+  # Livello di log dell'applicazione
+  log-level: "info"

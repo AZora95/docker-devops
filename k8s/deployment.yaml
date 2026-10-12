@@ -1,38 +1,113 @@
+---
+# Versione dell'API Kubernetes che definisce l'oggetto Deployment
 apiVersion: apps/v1
+# Tipo di risorsa: gestisce ReplicaSet e rolling update dei Pod
 kind: Deployment
+# Metadati del Deployment stesso (non dei Pod che crea)
 metadata:
+  # Nome univoco del Deployment nel namespace
   name: lipari-fe
+  # Etichette del Deployment, utili per filtrarlo (kubectl -l app=...)
   labels:
+    # Etichetta che identifica l'applicazione
     app: lipari-fe
+# Stato desiderato che il controller deve mantenere
 spec:
-  replicas: 2
+  # Numero di Pod identici da tenere sempre in esecuzione
+  replicas: 3
+  # Regola con cui il Deployment riconosce i "suoi" Pod
   selector:
+    # Appartengono al Deployment i Pod che hanno tutte queste etichette
     matchLabels:
+      # Deve coincidere con template.metadata.labels.app
       app: lipari-fe
+  # Modello usato per creare ogni Pod
   template:
+    # Metadati applicati a ogni Pod creato
     metadata:
+      # Etichette del Pod: le usano il selector qui sopra e il Service
       labels:
+        # Valore cercato da spec.selector del Service lipari-fe
         app: lipari-fe
+    # Specifica del Pod
     spec:
+      # Elenco dei container del Pod (qui uno solo)
       containers:
+        # Nome del container, compare in kubectl logs/describe
         - name: nginx
-          image: ghcr.io/REPLACE-OWNER/REPLACE-REPO-fe:REPLACE-SHA
+          # Immagine FE su GHCR, taggata con lo SHA corto del commit
+          # edc5fd4: ultima build pushata dal workflow Docker
+          image: ghcr.io/azora95/docker-devops-fe:edc5fd4
+          # Scarica l'immagine solo se non e' gia' presente sul nodo
+          imagePullPolicy: IfNotPresent
+          # Porte esposte dal container
           ports:
+            # Porta su cui nginx ascolta dentro il container
             - containerPort: 80
+              # Protocollo di trasporto della porta
+              protocol: TCP
+          # Variabili d'ambiente iniettate nel container; nginx non le
+          # legge, mostrano l'aggancio ConfigMap -> env (servono al BE)
+          env:
+            # Nome della variabile vista dal processo
+            - name: REDIS_URL
+              # Il valore arriva da una fonte esterna al manifest
+              valueFrom:
+                # Fonte: una chiave di un ConfigMap
+                configMapKeyRef:
+                  # Nome del ConfigMap (k8s/configmap.yaml)
+                  name: lipari-fe-config
+                  # Chiave da leggere dentro il ConfigMap
+                  key: redis-url
+            # Nome della variabile vista dal processo
+            - name: LOG_LEVEL
+              # Il valore arriva da una fonte esterna al manifest
+              valueFrom:
+                # Fonte: una chiave di un ConfigMap
+                configMapKeyRef:
+                  # Nome del ConfigMap (k8s/configmap.yaml)
+                  name: lipari-fe-config
+                  # Chiave da leggere dentro il ConfigMap
+                  key: log-level
+          # Risorse di CPU e memoria del container
           resources:
+            # Minimo garantito: lo scheduler sceglie un nodo che le ha
             requests:
+              # Memoria riservata al container
               memory: "64Mi"
+              # CPU riservata: 50 millicore = 5% di un core
               cpu: "50m"
+            # Tetto massimo che il container non puo' superare
             limits:
+              # Oltre questa memoria il container viene ucciso (OOMKilled)
               memory: "128Mi"
+              # Oltre questa CPU il container viene rallentato (throttling)
               cpu: "200m"
+          # Controlla se il container e' vivo; se fallisce, kubelet
+          # lo riavvia
           livenessProbe:
+            # Il controllo e' una richiesta HTTP GET
             httpGet:
+              # Percorso richiesto: la home servita da nginx
               path: /
+              # Porta del container su cui fare la richiesta
               port: 80
-            initialDelaySeconds: 10
+            # Attesa dopo l'avvio prima del primo controllo
+            initialDelaySeconds: 30
+            # Intervallo tra un controllo e il successivo
+            periodSeconds: 10
+            # Fallimenti consecutivi prima del riavvio
+            failureThreshold: 3
+          # Controlla se il container puo' ricevere traffico; se
+          # fallisce, il Pod esce dagli endpoint del Service
           readinessProbe:
+            # Il controllo e' una richiesta HTTP GET
             httpGet:
+              # Percorso richiesto: la home servita da nginx
               path: /
+              # Porta del container su cui fare la richiesta
               port: 80
-            initialDelaySeconds: 3
+            # Attesa dopo l'avvio prima del primo controllo
+            initialDelaySeconds: 5
+            # Intervallo tra un controllo e il successivo
+            periodSeconds: 5

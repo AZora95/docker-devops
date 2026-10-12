@@ -57,5 +57,5 @@ jobs:
       - name: Lint Dockerfile (hadolint)
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: percorso-be/Dockerfile
+          dockerfile: percorso-fe/Dockerfile
         continue-on-error: true

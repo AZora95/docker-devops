@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lipari-fe
+  labels:
+    app: lipari-fe
+spec:
+  # IP virtuale raggiungibile solo dall'interno del cluster
+  type: ClusterIP
+  # Inoltra il traffico ai Pod con questa etichetta
+  selector:
+    app: lipari-fe
+  ports:
+    - name: http
+      protocol: TCP
+      # Porta esposta dal Service
+      port: 80
+      # Porta del container: nginx ascolta sulla 80 (percorso FE).
+      # La 3000 indicata dall'esercizio e' quella di Node.js (percorso BE)
+      targetPort: 80
